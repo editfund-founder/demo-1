@@ -71,7 +71,7 @@ jobs:
           echo "apk_path=$apk_path" >> "$GITHUB_OUTPUT"
 
       - name: Create GitHub Release
-        if: ${{ steps.has_app.outputs.exists == 'true' && (startsWith(github.ref, 'refs/heads/main') || startsWith(github.ref, 'refs/heads/master') || github.event_name == 'workflow_dispatch') }}
+        if: ${{ steps.has_app.outputs.exists == 'true' && steps.find_apk.outputs.apk_path != '' && (startsWith(github.ref, 'refs/heads/main') || startsWith(github.ref, 'refs/heads/master') || github.event_name == 'workflow_dispatch') }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
