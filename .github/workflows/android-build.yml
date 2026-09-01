@@ -32,6 +32,11 @@ jobs:
         with:
           gradle-version: 8.7
 
+      - name: Check for Android module
+        id: has_app
+        run: |
+          if [ -d app ]; then echo "exists=true" >> "$GITHUB_OUTPUT"; else echo "exists=false" >> "$GITHUB_OUTPUT"; fi
+
       - name: Generate Gradle wrapper files
         run: gradle wrapper --gradle-version 8.7
 
@@ -46,3 +51,30 @@ jobs:
         with:
           name: java-build-artifacts
           path: build/libs/*.jar
+
+      - name: Build release APK
+        if: ${{ steps.has_app.outputs.exists == 'true' }}
+        run: ./gradlew --warning-mode all app:assembleRelease --no-daemon
+
+      - name: Upload APK artifact
+        if: ${{ steps.has_app.outputs.exists == 'true' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-release-apk
+          path: app/build/outputs/apk/release/*.apk
+
+      - name: Find release APK
+        if: ${{ steps.has_app.outputs.exists == 'true' }}
+        id: find_apk
+        run: |
+          apk_path=$(find app/build/outputs/apk/release -maxdepth 1 -type f -name '*.apk' | head -n 1)
+          echo "apk_path=$apk_path" >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub Release
+        if: ${{ steps.has_app.outputs.exists == 'true' && (startsWith(github.ref, 'refs/heads/main') || startsWith(github.ref, 'refs/heads/master') || github.event_name == 'workflow_dispatch') }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "apk-${{ github.run_number }}" "${{ steps.find_apk.outputs.apk_path }}" \
+            --title "APK Release ${{ github.run_number }}" \
+            --notes "Automated release generated from workflow run ${{ github.run_number }}."
