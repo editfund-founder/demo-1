@@ -64,14 +64,19 @@ jobs:
           path: app/build/outputs/apk/release/*.apk
 
       - name: Find release APK
-        if: ${{ steps.has_app.outputs.exists == 'true' }}
         id: find_apk
         run: |
-          apk_path=$(find app/build/outputs/apk/release -maxdepth 1 -type f -name '*.apk' | head -n 1)
+          apk_path=$(find app/build/outputs/apk/release -maxdepth 1 -type f -name '*.apk' | head -n 1 || true)
           echo "apk_path=$apk_path" >> "$GITHUB_OUTPUT"
 
+      - name: Debug APK path
+        run: |
+          echo "has_app=${{ steps.has_app.outputs.exists }}"
+          echo "found apk: '${{ steps.find_apk.outputs.apk_path }}'"
+          ls -la app/build/outputs/apk/release || true
+
       - name: Create GitHub Release
-        if: ${{ steps.has_app.outputs.exists == 'true' && steps.find_apk.outputs.apk_path != '' && (startsWith(github.ref, 'refs/heads/main') || startsWith(github.ref, 'refs/heads/master') || github.event_name == 'workflow_dispatch') }}
+        if: ${{ steps.find_apk.outputs.apk_path != '' && (startsWith(github.ref, 'refs/heads/main') || startsWith(github.ref, 'refs/heads/master') || github.event_name == 'workflow_dispatch') }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
