@@ -1,6 +1,6 @@
 plugins {
-    id("com.android.application")
-    kotlin("android")
+    id("com.android.application") version "8.2.2"
+    kotlin("android") version "2.0.20"
 }
 
 android {
@@ -33,7 +33,7 @@ android {
 }
 
 dependencies {
-    implementation("org.jetbrains.kotlin:kotlin-stdlib:1.9.10")
+    implementation("org.jetbrains.kotlin:kotlin-stdlib:2.0.20")
     implementation("com.squareup.okhttp3:okhttp:4.11.0")
     implementation("androidx.core:core-ktx:1.10.1")
     implementation("androidx.appcompat:appcompat:1.6.1")
