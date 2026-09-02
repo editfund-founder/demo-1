@@ -29,13 +29,6 @@ jobs:
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
-        with:
-          gradle-version: 8.7
-
-      - name: Check for Android module
-        id: has_app
-        run: |
-          if [ -d app ]; then echo "exists=true" >> "$GITHUB_OUTPUT"; else echo "exists=false" >> "$GITHUB_OUTPUT"; fi
 
       - name: Generate Gradle wrapper files
         run: gradle wrapper --gradle-version 8.7
@@ -43,21 +36,10 @@ jobs:
       - name: Grant execute permission for Gradle wrapper
         run: chmod +x ./gradlew
 
-      - name: Build JVM project
-        run: ./gradlew --warning-mode all build --no-daemon
-
-      - name: Upload JAR artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: java-build-artifacts
-          path: build/libs/*.jar
-
       - name: Build release APK
-        if: ${{ steps.has_app.outputs.exists == 'true' }}
         run: ./gradlew --warning-mode all app:assembleRelease --no-daemon
 
       - name: Upload APK artifact
-        if: ${{ steps.has_app.outputs.exists == 'true' }}
         uses: actions/upload-artifact@v4
         with:
           name: app-release-apk
@@ -66,17 +48,11 @@ jobs:
       - name: Find release APK
         id: find_apk
         run: |
-          apk_path=$(find app/build/outputs/apk/release -maxdepth 1 -type f -name '*.apk' | head -n 1 || true)
+          apk_path=$(find app/build/outputs/apk/release -maxdepth 1 -type f -name '*.apk' | head -n 1)
           echo "apk_path=$apk_path" >> "$GITHUB_OUTPUT"
 
-      - name: Debug APK path
-        run: |
-          echo "has_app=${{ steps.has_app.outputs.exists }}"
-          echo "found apk: '${{ steps.find_apk.outputs.apk_path }}'"
-          ls -la app/build/outputs/apk/release || true
-
       - name: Create GitHub Release
-        if: ${{ steps.find_apk.outputs.apk_path != '' && (startsWith(github.ref, 'refs/heads/main') || startsWith(github.ref, 'refs/heads/master') || github.event_name == 'workflow_dispatch') }}
+        if: startsWith(github.ref, 'refs/heads/main') || startsWith(github.ref, 'refs/heads/master') || github.event_name == 'workflow_dispatch'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |

@@ -1,22 +1,11 @@
 plugins {
-    kotlin("jvm") version "1.9.10"
-    application
+    id("com.android.application") version "8.1.0" apply false
+    kotlin("android") version "1.9.10" apply false
 }
 
-repositories {
-    mavenCentral()
-}
-
-dependencies {
-    implementation(kotlin("stdlib"))
-}
-
-java {
-    toolchain {
-        languageVersion.set(JavaLanguageVersion.of(11))
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
     }
-}
-
-application {
-    mainClass.set("MainKt")
 }
